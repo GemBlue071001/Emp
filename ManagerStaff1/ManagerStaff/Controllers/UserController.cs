@@ -125,6 +125,7 @@ namespace ManagerStaff.Controllers
                 FirstName = u.FirstName,
                 LastName = u.LastName,
                 Phone = u.Phone,
+                RoleId = u.RoleId,
                 UserType = u.Role?.Name ?? "Unknown",
                 DepartmentName = u.Department?.Name ?? "Không có phòng ban",
                 SubDepartment = u.Department?.Parent?.Name ?? "Không có phòng ban con"

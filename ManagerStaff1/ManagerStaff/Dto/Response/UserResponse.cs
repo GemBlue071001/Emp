@@ -10,5 +10,6 @@
         public string UserType { get; set; }
         public string DepartmentName { get; set; }
         public string SubDepartment { get; set; }
+        public int? RoleId { get; set; }
     }
 }

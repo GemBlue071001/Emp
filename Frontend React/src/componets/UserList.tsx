@@ -14,6 +14,7 @@ interface User {
   roleId: number;
   role: string | null;
   subDepartment: string | null;
+  departmentName: string | null;
   departmentId: number;
 }
 
@@ -24,6 +25,7 @@ interface TransformedUser {
   lastName: string;
   phone: string;
   userType: string;
+  departmentName: string | null;
   subDepartment: string;
 }
 
@@ -73,7 +75,8 @@ const UserList: React.FC = () => {
           lastName: user.lastName,
           phone: user.phone,
           userType: getRoleName(user.roleId),
-          subDepartment: `${user.subDepartment}`
+          departmentName: user.departmentName,
+          subDepartment: `${user.departmentName}`
         }));
         setUsers(transformedUsers);
         setTotal(data.result.length);

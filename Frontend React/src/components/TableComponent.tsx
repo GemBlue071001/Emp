@@ -1,7 +1,8 @@
-import React from 'react';
-import { Table, Tag, Space, Avatar, Button, Modal } from 'antd';
+import React, { useState } from 'react';
+import { Table, Tag, Space, Avatar, Button, Modal, message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import type { ColumnsType } from 'antd/es/table';
+import { jwtDecode } from 'jwt-decode';
 
 interface TableRow {
   email: string;
@@ -24,37 +25,66 @@ interface TableComponentProps {
   };
 }
 
+interface DecodedToken {
+  roleId: number;
+  exp: number;
+  Authorities: string;
+}
+
 const TableComponent: React.FC<TableComponentProps> = ({ data, loading, pagination }) => {
   const navigate = useNavigate();
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [emailToDelete, setEmailToDelete] = useState<string>('');
+
+  const isCurrentUserAdmin = (): boolean => {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      try {
+        const decoded = jwtDecode(token) as DecodedToken;
+        return decoded.Authorities === "ADMIN";
+      } catch (error) {
+        console.error('Error decoding token:', error);
+        return false;
+      }
+    }
+    return false;
+  };
 
   const handleEdit = (record: TableRow) => {
     navigate('/update-user', { state: { userData: record } });
   };
 
-  const handleDelete = async (email: string) => {
+  const handleDelete = (email: string) => {
+    setEmailToDelete(email);
+    setIsModalVisible(true);
+  };
+
+  const handleDeleteConfirm = async () => {
     try {
-      const response = await fetch(`https://localhost:7073/api/users?email=${email}`, {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`https://localhost:7073/api/users/${emailToDelete}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${localStorage.getItem("accessToken")}`,
-          'accept': '*/*'
+          'Authorization': `Bearer ${token}`,
         },
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to delete user');
+      if (response.ok) {
+        message.success('User deleted successfully');
+        // Trigger refresh of data
+        if (pagination && pagination.onChange) {
+          pagination.onChange(pagination.current);
+        }
+      } else {
+        message.error('Failed to delete user');
       }
-      window.location.reload();
     } catch (error) {
       console.error('Error deleting user:', error);
-      Modal.error({
-        title: 'Error',
-        content: 'Failed to delete user'
-      });
+      message.error('Failed to delete user');
+    } finally {
+      setIsModalVisible(false);
     }
-  }
-
-
+  };
 
   const columns: ColumnsType<TableRow> = [
     {
@@ -82,8 +112,8 @@ const TableComponent: React.FC<TableComponentProps> = ({ data, loading, paginati
     },
     {
       title: 'Department',
-      dataIndex: 'subDepartment',
-      key: 'subDepartment',
+      dataIndex: 'departmentName',
+      key: 'departmentName',
       render: (text: string | null) => text || '',
     },
     {
@@ -99,42 +129,68 @@ const TableComponent: React.FC<TableComponentProps> = ({ data, loading, paginati
     {
       title: 'Actions',
       key: 'actions',
-      render: (_, record) => (
-        <Space size="middle">
-          <Button
-            type="link"
-            style={{ padding: 0, color: '#1890ff' }}
-            onClick={() => handleEdit(record)}
-          >
-            Edit
-          </Button>
-          <Button
-            type="link"
-            style={{ padding: 0, color: '#ff4d4f' }}
-            onClick={() => handleDelete(record.email)}
-          >
-            Delete
-          </Button>
-        </Space>
-      ),
+      render: (_, record) => {
+        const isAdmin = isCurrentUserAdmin();
+        const isUserAdmin = record.userType === 'ADMIN';
+        const disableActions = !isAdmin || isUserAdmin;
+
+        return (
+          <Space size="middle">
+            <Button
+              type="link"
+              style={{ 
+                padding: 0, 
+                color: disableActions ? '#d9d9d9' : '#1890ff',
+                cursor: disableActions ? 'not-allowed' : 'pointer'
+              }}
+              onClick={() => !disableActions && handleEdit(record)}
+              disabled={disableActions}
+            >
+              Edit
+            </Button>
+            <Button
+              type="link"
+              style={{ 
+                padding: 0, 
+                color: disableActions ? '#d9d9d9' : '#ff4d4f',
+                cursor: disableActions ? 'not-allowed' : 'pointer'
+              }}
+              onClick={() => !disableActions && handleDelete(record.email)}
+              disabled={disableActions}
+            >
+              Delete
+            </Button>
+          </Space>
+        );
+      },
     },
   ];
 
   return (
-    <Table
-      columns={columns}
-      dataSource={data}
-      rowKey="email"
-      loading={loading}
-      pagination={{
-        ...pagination,
-        showSizeChanger: false,
-        showQuickJumper: false,
-        size: 'small',
-        style: { marginBottom: 0 }
-      }}
-      style={{ marginTop: '8px' }}
-    />
+    <>
+      <Table
+        columns={columns}
+        dataSource={data}
+        rowKey="email"
+        loading={loading}
+        pagination={{
+          ...pagination,
+          showSizeChanger: false,
+          showQuickJumper: false,
+          size: 'small',
+          style: { marginBottom: 0 }
+        }}
+        style={{ marginTop: '8px' }}
+      />
+      <Modal
+        title="Confirm Delete"
+        open={isModalVisible}
+        onOk={handleDeleteConfirm}
+        onCancel={() => setIsModalVisible(false)}
+      >
+        <p>Are you sure you want to delete this user?</p>
+      </Modal>
+    </>
   );
 };
 

@@ -1,106 +1,105 @@
-import React from 'react';
-import { Layout, Menu } from 'antd';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Layout, Menu } from 'antd';
 import {
   UserOutlined,
   TeamOutlined,
-  DashboardOutlined,
   LogoutOutlined,
+  DashboardOutlined,
   ProfileOutlined,
 } from '@ant-design/icons';
-import type { MenuProps } from 'antd';
+import { jwtDecode } from 'jwt-decode';
 
 const { Sider } = Layout;
+
+interface DecodedToken {
+  roleId: number;
+  exp: number;
+  Authorities: string;
+}
 
 const Sidebar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [isAdmin, setIsAdmin] = useState(false);
 
-  const menuItems: MenuProps['items'] = [
-    {
-      key: '/admin',
-      icon: <DashboardOutlined style={{ fontSize: '16px' }} />,
-      label: 'Dashboard',
-    },
-    {
-      key: '/home',
-      icon: <UserOutlined style={{ fontSize: '16px' }} />,
-      label: 'Users',
-    },
-    {
-      key: '/departments',
-      icon: <TeamOutlined style={{ fontSize: '16px' }} />,
-      label: 'Departments',
-    },
-  ];
-
-  const handleMenuClick = (item: { key: string }) => {
-    if (item.key === 'logout') {
-      localStorage.removeItem('accessToken');
-      navigate('/login');
-    } else {
-      navigate(item.key);
+  useEffect(() => {
+    const token = localStorage.getItem('accessToken');
+    if (token) {
+      try {
+        const decoded = jwtDecode(token) as DecodedToken;
+        setIsAdmin(decoded.Authorities === "ADMIN");
+      } catch (error) {
+        console.error('Error decoding token:', error);
+        setIsAdmin(false);
+      }
     }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem('accessToken');
+    navigate('/login');
   };
+
+  const menuItems = [
+    ...(isAdmin ? [
+      {
+        key: '/admin',
+        icon: <DashboardOutlined />,
+        label: 'Dashboard',
+        onClick: () => navigate('/admin')
+      },
+      {
+        key: '/departments',
+        icon: <TeamOutlined />,
+        label: 'Departments',
+        onClick: () => navigate('/departments')
+      }
+    ] : []),
+    {
+      key: '/users',
+      icon: <UserOutlined />,
+      label: 'Users',
+      onClick: () => navigate('/home')
+    },
+    {
+      key: '/view-user',
+      icon: <ProfileOutlined />,
+      label: 'Profile',
+      onClick: () => navigate('/view-user')
+    },
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: 'Logout',
+      onClick: handleLogout
+    }
+  ];
 
   return (
     <Sider
-      width={180}
       style={{
-        background: '#fff',
+        overflow: 'auto',
         height: '100vh',
         position: 'fixed',
         left: 0,
         top: 0,
         bottom: 0,
-        borderRight: '1px solid #f0f0f0',
+        backgroundColor: '#001529'
       }}
+      width={180}
     >
-      <div style={{ padding: '20px 16px' }}>
-        <h1 style={{ 
-          fontSize: '24px', 
-          fontWeight: 'bold',
-          color: '#0066ff',
-          margin: 0,
-          lineHeight: 1.2
-        }}>
-          Admin<br />Panel
+      <div style={{ height: '64px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <h1 style={{ color: 'white', margin: 0, fontSize: '20px' }}>
+          {isAdmin ? 'Admin Panel' : 'User Panel'}
         </h1>
       </div>
       <Menu
+        theme="dark"
         mode="inline"
         selectedKeys={[location.pathname]}
-        defaultSelectedKeys={['/admin']}
         items={menuItems}
-        style={{ 
-          borderRight: 'none',
-        }}
-        onClick={handleMenuClick}
       />
-      <div style={{ 
-        position: 'absolute', 
-        bottom: 0, 
-        width: '100%',
-        borderTop: '1px solid #f0f0f0'
-      }}>
-        <Menu
-          mode="inline"
-          items={[
-            {
-              key: '/view-user',
-              icon: <ProfileOutlined style={{ fontSize: '16px', color: '#1890ff' }} />,
-              label: <span style={{ color: '#1890ff' }}>User Profile</span>,
-            },
-            {
-              key: 'logout',
-              icon: <LogoutOutlined style={{ fontSize: '16px', color: '#ff4d4f' }} />,
-              label: <span style={{ color: '#ff4d4f' }}>Logout</span>,
-            },
-          ]}
-          onClick={handleMenuClick}
-          style={{ borderRight: 'none' }}
-        />
-      </div>
     </Sider>
   );
 };
