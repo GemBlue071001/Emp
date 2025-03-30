@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TableComponent from '../components/TableComponent';
 import Sidebar from '../components/Sidebar';
-import { Spin, Layout, Input, Button } from 'antd';
+import { Spin, Input, Button, Select } from 'antd';
 import { SearchOutlined, UserAddOutlined } from '@ant-design/icons';
 
-const { Content } = Layout;
+const { Option } = Select;
 
 interface User {
   email: string;
@@ -17,23 +17,64 @@ interface User {
   subDepartment: string | null;
 }
 
+interface Department {
+  id: number;
+  name: string;
+}
+
 const AdminDashboard = () => {
   const [users, setUsers] = useState<User[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedDepartment, setSelectedDepartment] = useState<number | undefined>();
+  const [selectedRole, setSelectedRole] = useState<number | undefined>();
   const [page, setPage] = useState<number>(1);
-  const [totalPages, setTotalPages] = useState<number>(1);
   const [totalItems, setTotalItems] = useState<number>(0);
   const pageSize = 15;
 
   const navigate = useNavigate();
 
   useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const response = await fetch('https://localhost:7073/api/departments', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem("accessToken")}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch departments');
+        }
+
+        const data = await response.json();
+        setDepartments(data.result);
+      } catch (error) {
+        console.error('Error fetching departments:', error);
+      }
+    };
+
+    fetchDepartments();
+  }, []);
+
+  useEffect(() => {
     const fetchUsers = async () => {
       try {
         const normalizedSearchQuery = searchQuery.toLowerCase();
-        const response = await fetch(`https://localhost:7073/api/users?page=${page}&size=${pageSize}&searchQuery=${normalizedSearchQuery}`, {
+        let url = `https://localhost:7073/api/users?page=${page}&size=${pageSize}&searchQuery=${normalizedSearchQuery}`;
+        
+        if (selectedDepartment) {
+          url += `&departmentId=${selectedDepartment}`;
+        }
+        if (selectedRole) {
+          url += `&roleId=${selectedRole}`;
+        }
+
+        const response = await fetch(url, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem("accessToken")}`,
@@ -47,17 +88,16 @@ const AdminDashboard = () => {
 
         const data = await response.json();
         setUsers(data.result.data);
-        setTotalPages(data.result.totalPages);
         setTotalItems(data.result.totalElemets);
         setLoading(false);
-      } catch (error: any) {
-        setError(error.message);
+      } catch (error) {
+        setError(error instanceof Error ? error.message : 'An error occurred');
         setLoading(false);
       }
     };
 
     fetchUsers();
-  }, [page, searchQuery]);
+  }, [page, searchQuery, selectedDepartment, selectedRole]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -91,25 +131,55 @@ const AdminDashboard = () => {
           <h1 style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '24px' }}>
             Admin Dashboard
           </h1>
-          <Input
-            placeholder="Search users..."
-            value={searchQuery}
-            onChange={handleSearchChange}
-            prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-            style={{ width: '300px' }}
-          />
-           
-        </div>
-        <Button 
-              type="primary"
+          <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+            <Input
+              placeholder="Search users..."
+              value={searchQuery}
+              onChange={handleSearchChange}
+              prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+              style={{ width: '300px' }}
+            />
+            <Select
               style={{ width: '200px' }}
-              icon={<UserAddOutlined />}
-              onClick={() => {
-                navigate('/users')
+              placeholder="Department"
+              value={selectedDepartment}
+              onChange={(value) => {
+                setSelectedDepartment(value);
+                setPage(1);
               }}
+              allowClear
             >
-              Add User
-            </Button>
+              {departments.map(dept => (
+                <Option key={dept.id} value={dept.id}>
+                  {dept.name}
+                </Option>
+              ))}
+            </Select>
+            <Select
+              style={{ width: '200px' }}
+              placeholder="Role"
+              value={selectedRole}
+              onChange={(value) => {
+                setSelectedRole(value);
+                setPage(1);
+              }}
+              allowClear
+            >
+              <Option value={1}>ADMIN</Option>
+              <Option value={2}>USER</Option>
+            </Select>
+          </div>
+          <Button 
+            type="primary"
+            style={{ width: '200px' }}
+            icon={<UserAddOutlined />}
+            onClick={() => {
+              navigate('/users')
+            }}
+          >
+            Add User
+          </Button>
+        </div>
         <TableComponent
           data={users}
           loading={loading}
