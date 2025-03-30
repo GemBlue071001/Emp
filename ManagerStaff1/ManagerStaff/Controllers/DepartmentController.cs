@@ -46,5 +46,30 @@ namespace ManagerStaff.Controllers
             );
         }
 
+        // API cập nhật thông tin phòng ban
+        [HttpPut]
+        //[Authorize(Roles = "ADMIN")]
+        public async Task<ApiResponse<DepartmentResponse>> UpdateDepartment([FromBody] DepartmentUpdateRequest request)
+        {
+            var department = await departmentService.UpdateDepartment(request);
+            return new ApiResponse<DepartmentResponse>(
+                code: 200,
+                message: "Cập nhật thông tin phòng ban thành công",
+                result: department
+            );
+        }
+
+        // API xóa phòng ban
+        [HttpDelete("{id}")]
+        //[Authorize(Roles = "ADMIN")]
+        public async Task<ApiResponse<bool>> DeleteDepartment(int id)
+        {
+            var result = await departmentService.DeleteDepartment(id);
+            return new ApiResponse<bool>(
+                code: 200,
+                message: "Xóa phòng ban thành công",
+                result: result
+            );
+        }
     }
 }

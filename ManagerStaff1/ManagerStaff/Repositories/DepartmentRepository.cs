@@ -36,6 +36,45 @@ namespace ManagerStaff.Repositories
             await _context.SaveChangesAsync();
         }
 
+        // Cập nhật thông tin phòng ban
+        public async Task<Department?> UpdateDepartmentAsync(Department department)
+        {
+            var existingDepartment = await _context.Departments.FindAsync(department.Id);
+            if (existingDepartment == null)
+            {
+                return null;
+            }
+
+            existingDepartment.Name = department.Name;
+            existingDepartment.ParentId = department.ParentId;
+
+            await _context.SaveChangesAsync();
+            return existingDepartment;
+        }
+
+        // Xóa phòng ban
+        public async Task<bool> DeleteDepartmentAsync(int id)
+        {
+            var department = await _context.Departments
+                .Include(d => d.Users)
+                .FirstOrDefaultAsync(d => d.Id == id);
+
+            if (department == null)
+            {
+                return false;
+            }
+
+            // Check if department has users
+            if (department.Users != null && department.Users.Any())
+            {
+                return false;
+            }
+
+            _context.Departments.Remove(department);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         //Chuyển đổi một đối tượng Department thành DepartmentResponse, bao gồm cả phòng ban con
         private DepartmentResponse MapToDepartmentResponse(Department department)
         {

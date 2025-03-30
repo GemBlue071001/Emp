@@ -36,9 +36,42 @@ namespace ManagerStaff.Services.Impl
                 Name = department.Name,
                 ParentId = request.ParentId,
             };
-
         }
 
+        // Cập nhật thông tin phòng ban
+        public async Task<DepartmentResponse> UpdateDepartment(DepartmentUpdateRequest request)
+        {
+            var department = new Department
+            {
+                Id = request.Id,
+                Name = request.Name,
+                ParentId = request.ParentId
+            };
+
+            var updatedDepartment = await departmentRepository.UpdateDepartmentAsync(department);
+            if (updatedDepartment == null)
+            {
+                throw new Exception("Không tìm thấy phòng ban");
+            }
+
+            return new DepartmentResponse
+            {
+                Id = updatedDepartment.Id,
+                Name = updatedDepartment.Name,
+                ParentId = updatedDepartment.ParentId ?? 0
+            };
+        }
+
+        // Xóa phòng ban
+        public async Task<bool> DeleteDepartment(int id)
+        {
+            var result = await departmentRepository.DeleteDepartmentAsync(id);
+            if (!result)
+            {
+                throw new Exception("Không thể xóa phòng ban. Phòng ban không tồn tại hoặc đang có nhân viên.");
+            }
+            return true;
+        }
     }
 }
  
