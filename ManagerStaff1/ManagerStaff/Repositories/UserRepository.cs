@@ -62,7 +62,7 @@ namespace ManagerStaff.Repositories
                 .ToListAsync();
         }
         // Lấy danh sách user theo phân trang và tìm kiếm
-        public async Task<List<Employee>> GetAllUsers(int page, int size, string? searchQuery = null)
+        public async Task<List<Employee>> GetAllUsers(int page, int size, string? searchQuery = null, int? departmentId = null, int? roleId = null)
         {
             IQueryable<Employee> query = _context.Users
                 .Include(u => u.Role)
@@ -82,6 +82,18 @@ namespace ManagerStaff.Repositories
                                          u.UserName.ToLower().Contains(normalizedSearchQuery));
             }
 
+            // Thêm bộ lọc theo department
+            if (departmentId.HasValue)
+            {
+                query = query.Where(u => u.DepartmentId == departmentId.Value);
+            }
+
+            // Thêm bộ lọc theo role
+            if (roleId.HasValue)
+            {
+                query = query.Where(u => u.RoleId == roleId.Value);
+            }
+
             return await query
                 .Skip((page - 1) * size)
                 .Take(size)
@@ -89,7 +101,7 @@ namespace ManagerStaff.Repositories
         }
 
         // Lấy số lượng user thỏa mãn điều kiện tìm kiếm
-        public async Task<long> GetTotalUsersCount(string? searchQuery = null)
+        public async Task<long> GetTotalUsersCount(string? searchQuery = null, int? departmentId = null, int? roleId = null)
         {
             IQueryable<Employee> query = _context.Users;
 
@@ -104,6 +116,18 @@ namespace ManagerStaff.Repositories
                                          u.Department.Name.ToLower().Contains(normalizedSearchQuery) ||
                                          u.LastName.ToLower().Contains(normalizedSearchQuery) ||
                                          u.UserName.ToLower().Contains(normalizedSearchQuery));
+            }
+
+            // Thêm bộ lọc theo department
+            if (departmentId.HasValue)
+            {
+                query = query.Where(u => u.DepartmentId == departmentId.Value);
+            }
+
+            // Thêm bộ lọc theo role
+            if (roleId.HasValue)
+            {
+                query = query.Where(u => u.RoleId == roleId.Value);
             }
 
             return await query.CountAsync();    // Đếm số lượng user phù hợp

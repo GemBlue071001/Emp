@@ -7,7 +7,7 @@ namespace ManagerStaff.Services
     public interface IUserService
     {
         Task<UserCreationResponse> CreateUser(UserCreationRequest request);
-        Task<PageResponse<UserResponse>> FindAll(int page, int size, string? searchQuery = null);
+        Task<PageResponse<UserResponse>> FindAll(int page, int size, string? searchQuery = null, int? departmentId = null, int? roleId = null);
         Task<List<Employee>> GetEmployeesBySameDepartment(int departmentId);
         Task<UserUpdateResponse> UpdateUser(UserUpdateRequest request);
         Task<bool> DeleteUserByEmailAsync(string email);

@@ -102,10 +102,10 @@ namespace ManagerStaff.Services.Impl
         }
 
         // Lấy danh sách người dùng theo phân trang, có thể tìm kiếm theo từ khóa
-        public async Task<PageResponse<UserResponse>> FindAll(int page, int size, string? searchQuery = null)
+        public async Task<PageResponse<UserResponse>> FindAll(int page, int size, string? searchQuery = null, int? departmentId = null, int? roleId = null)
         {
-            var users = await userRepository.GetAllUsers(page, size, searchQuery);      // Lấy danh sách người dùng theo trang và từ khóa tìm kiếm
-            var totalItems = await userRepository.GetTotalUsersCount(searchQuery);      // Lấy tổng số lượng người dùng phù hợp với từ khóa tìm kiếm
+            var users = await userRepository.GetAllUsers(page, size, searchQuery, departmentId, roleId);      // Lấy danh sách người dùng theo trang và từ khóa tìm kiếm
+            var totalItems = await userRepository.GetTotalUsersCount(searchQuery, departmentId, roleId);      // Lấy tổng số lượng người dùng phù hợp với từ khóa tìm kiếm
 
             var result = users.Select(user => new UserResponse      // Chuyển danh sách Employee sang danh sách UserResponse
             {

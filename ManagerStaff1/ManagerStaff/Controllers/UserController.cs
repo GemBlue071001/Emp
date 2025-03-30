@@ -36,13 +36,15 @@ namespace ManagerStaff.Controllers
         (
             [FromQuery] int? page,   
             [FromQuery] int? size,   
-            [FromQuery] string? searchQuery 
+            [FromQuery] string? searchQuery,
+            [FromQuery] int? departmentId,
+            [FromQuery] int? roleId
         )
         {
             int currentPage = page ?? 1;    // Số trang hiện tại (nếu không có, mặc định là 1)
             int pageSize = size ?? 4;       // Kích thước trang (nếu không có, mặc định là 4)
 
-            var users = await userService.FindAll(currentPage, pageSize, searchQuery);  // Gọi service để lấy danh sách người dùng
+            var users = await userService.FindAll(currentPage, pageSize, searchQuery, departmentId, roleId);  // Gọi service để lấy danh sách người dùng
 
             return new ApiResponse<PageResponse<UserResponse>>(     // Trả về phản hồi với mã 200 (OK) và danh sách người dùng
                 code: 200,
