@@ -1,8 +1,16 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Select } from 'antd';
+
+interface Department {
+  id: number;
+  name: string;
+}
 
 const User = () => {
   const [users, setUsers] = useState<any[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -15,7 +23,7 @@ const User = () => {
     phone: '',
     userType: 'USER',
     userName: '',
-    departmentId: 1
+    departmentId: undefined
   });
 
   const navigate = useNavigate();
@@ -39,6 +47,7 @@ const User = () => {
         setUsers(data.result.data);
         setTotalPages(data.result.totalPages);
         setLoading(false);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (error: any) {
         setError(error.message);
         setLoading(false);
@@ -48,14 +57,39 @@ const User = () => {
     fetchUsers();
   }, [page, searchQuery]);
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    setPage(1);
-  };
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const response = await fetch('https://localhost:7073/api/departments', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem("accessToken")}`,
+            'Content-Type': 'application/json',
+          },
+        });
 
-  const handlePageChange = (newPage: number) => {
-    setPage(newPage);
-  };
+        if (!response.ok) {
+          throw new Error('Failed to fetch departments');
+        }
+
+        const data = await response.json();
+        setDepartments(data.result);
+      } catch (error) {
+        console.error('Error fetching departments:', error);
+      }
+    };
+
+    fetchDepartments();
+  }, []);
+
+  // const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   setSearchQuery(e.target.value);
+  //   setPage(1);
+  // };
+
+  // const handlePageChange = (newPage: number) => {
+  //   setPage(newPage);
+  // };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setNewUser({ ...newUser, [e.target.name]: e.target.value });
@@ -80,6 +114,7 @@ const User = () => {
       alert(data.message);
       setUsers([...users, data.result]);
       navigate('/admin');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       alert(error.message);
     }
@@ -109,7 +144,19 @@ const User = () => {
           <input type="text" name="phone" placeholder="Phone" className="border p-2 rounded" onChange={handleInputChange} />
           <input type="text" name="userName" placeholder="Username" className="border p-2 rounded" onChange={handleInputChange} />
           <input type="text" name="password" placeholder="Password" className="border p-2 rounded" onChange={handleInputChange} />
-          
+          <Select
+            style={{ width: '100%' }}
+            placeholder="Department"
+            value={newUser.departmentId}
+            onChange={(value) => setNewUser(prev => ({ ...prev, departmentId: value }))}
+            allowClear
+          >
+            {departments.map(dept => (
+              <Select.Option key={dept.id} value={dept.id}>
+                {dept.name}
+              </Select.Option>
+            ))}
+          </Select>
         </div>
         <button onClick={handleCreateUser} className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-700">Tạo Người Dùng</button>
       </div>
