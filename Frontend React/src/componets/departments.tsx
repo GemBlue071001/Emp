@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Table, Typography, message, Button, Modal, Select, Input } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
+import { Card, Table, Typography, message, Button, Modal, Select, Input, Tree } from 'antd';
+import { PlusOutlined, CarryOutOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import type { ColumnsType } from 'antd/es/table';
+import type { TreeDataNode } from 'antd';
 
 const { Title } = Typography;
 
@@ -24,6 +25,22 @@ interface NewDepartment {
   name: string;
   parentId: number;
 }
+
+const transformToTreeData = (departments: Department[]): TreeDataNode[] => {
+  const buildTree = (parentId: number): TreeDataNode[] => {
+    return departments
+      .filter(dept => dept.parentId === parentId)
+      .map(dept => ({
+        title: dept.name,
+        key: dept.id.toString(),
+        icon: <CarryOutOutlined />,
+        children: buildTree(dept.id)
+      }))
+      .filter(node => node !== null);
+  };
+
+  return buildTree(0);
+};
 
 const DepartmentComponent: React.FC = () => {
   const navigate = useNavigate();
@@ -172,16 +189,30 @@ const DepartmentComponent: React.FC = () => {
             >
               Add Department
             </Button>
-          <Table
-            columns={columns}
-            dataSource={departments}
-            loading={loading}
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: true,
-              showTotal: (total) => `Total ${total} departments`
-            }}
-          />
+          
+          <div style={{ display: 'flex', gap: '24px' }}>
+            <Card style={{ width: '300px' }}>
+              <Tree
+                showLine
+                showIcon
+                defaultExpandAll
+                treeData={transformToTreeData(departments)}
+              />
+            </Card>
+            
+            {/* <div style={{ flex: 1 }}>
+              <Table
+                columns={columns}
+                dataSource={departments}
+                loading={loading}
+                pagination={{
+                  pageSize: 10,
+                  showSizeChanger: true,
+                  showTotal: (total) => `Total ${total} departments`
+                }}
+              />
+            </div> */}
+          </div>
         </Card>
 
         <Modal

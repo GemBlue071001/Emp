@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Input, Space } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import TableComponent from '../components/TableComponent';
 import Sidebar from '../components/Sidebar';
@@ -27,6 +26,7 @@ interface TransformedUser {
   userType: string;
   departmentName: string | null;
   subDepartment: string;
+  departmentId: number;
 }
 
 interface ApiResponse {
@@ -35,16 +35,44 @@ interface ApiResponse {
   result: User[];
 }
 
+interface Department {
+  id: number;
+  name: string;
+  parentId: number;
+}
+
 const UserList: React.FC = () => {
   const navigate = useNavigate();
   const [users, setUsers] = useState<TransformedUser[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchText, setSearchText] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
   const pageSize = 10;
 
   useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const response = await fetch('https://localhost:7073/api/departments', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem("accessToken")}`,
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch departments');
+        }
+
+        const data = await response.json();
+        setDepartments(data.result);
+      } catch (error) {
+        console.error('Error fetching departments:', error);
+      }
+    };
+
+    fetchDepartments();
     fetchUsers();
   }, [currentPage]);
 
@@ -76,7 +104,8 @@ const UserList: React.FC = () => {
           phone: user.phone,
           userType: getRoleName(user.roleId),
           departmentName: user.departmentName,
-          subDepartment: `${user.departmentName}`
+          subDepartment: `${user.departmentName}`,
+          departmentId: user.departmentId
         }));
         setUsers(transformedUsers);
         setTotal(data.result.length);
@@ -101,17 +130,6 @@ const UserList: React.FC = () => {
     }
   };
 
-  const handleSearch = (value: string) => {
-    setSearchText(value);
-    const filteredUsers = users.filter(user =>
-      user.name.toLowerCase().includes(value.toLowerCase()) ||
-      user.email.toLowerCase().includes(value.toLowerCase()) ||
-      user.userType.toLowerCase().includes(value.toLowerCase()) ||
-      user.subDepartment.toLowerCase().includes(value.toLowerCase())
-    );
-    setUsers(filteredUsers);
-  };
-
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
   };
@@ -122,10 +140,10 @@ const UserList: React.FC = () => {
       <div style={{ marginLeft: '180px', padding: '24px', flex: 1 }}>
         <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h1 style={{ margin: 0 }}>User Management</h1>
-         
         </div>
         <TableComponent
           data={users}
+          departments={departments}
           loading={loading}
           pagination={{
             current: currentPage,
