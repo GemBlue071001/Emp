@@ -77,6 +77,7 @@ namespace ManagerStaff.Services.Impl
             user.Email = request.Email;
             user.Phone = request.Phone;
             user.UserName = request.UserName;
+            user.DepartmentId = request.DepartmentId;
             user.Password = passwordHasher.HashPassword(user, request.Password.Trim());
             if (!string.IsNullOrWhiteSpace(request.Password))
             {
@@ -116,7 +117,8 @@ namespace ManagerStaff.Services.Impl
                 Phone = user.Phone,
                 UserType = user.Role?.Name ?? "Unknown",
                 DepartmentName = user.Department?.Name ?? "Không có phòng ban",
-                SubDepartment = user.Department?.Parent?.Name ?? "Không có phòng ban con"
+                SubDepartment = user.Department?.Parent?.Name ?? "Không có phòng ban con",
+                
             }).ToList();
 
             var totalPages = (int)Math.Ceiling((double)totalItems / size);      //Tính tổng số trang

@@ -10,7 +10,7 @@ const UpdateUser: React.FC = () => {
     lastName: userData?.lastName || '',
     email: userData?.email || '',
     phone: userData?.phone || '',
-    userName: userData?.email || '',
+    userName: userData?.name || '',
     password: '',
   });
 
