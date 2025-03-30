@@ -62,7 +62,7 @@ const TableComponent: React.FC<TableComponentProps> = ({ data, loading, paginati
   const handleDeleteConfirm = async () => {
     try {
       const token = localStorage.getItem('accessToken');
-      const response = await fetch(`https://localhost:7073/api/users/${emailToDelete}`, {
+      const response = await fetch(`https://localhost:7073/api/users?email=${emailToDelete}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -83,6 +83,7 @@ const TableComponent: React.FC<TableComponentProps> = ({ data, loading, paginati
       message.error('Failed to delete user');
     } finally {
       setIsModalVisible(false);
+      window.location.reload();
     }
   };
 
