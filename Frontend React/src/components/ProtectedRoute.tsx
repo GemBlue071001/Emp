@@ -42,3 +42,66 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, requiredRole 
 };
 
 export default ProtectedRoute;
+
+
+
+
+// import { JSX, useEffect, useState } from 'react';
+// import { Navigate } from 'react-router-dom';
+// import { jwtDecode } from 'jwt-decode';
+
+// interface ProtectedRouteProps {
+//   children: JSX.Element;
+//   requiredRole?: string; // Optional role prop
+// }
+
+// interface DecodedToken {
+//   Authorities: string;
+// }
+
+// const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
+//   const [isAuthenticated, setIsAuthenticated] = useState(false);
+//   const [hasRequiredRole, setHasRequiredRole] = useState(true);
+//   const [loading, setLoading] = useState(true); // New loading state
+//   console.log("rendering ProtectedRoute");
+  
+
+//   useEffect(() => {
+//     console.log("running useEffect");
+//     const token = localStorage.getItem('accessToken');
+//     if (token) {
+//       try {
+//         const decoded = jwtDecode(token) as DecodedToken;
+//         console.log("check auth success");
+
+//         setIsAuthenticated(true);
+//         if (requiredRole) {
+//           setHasRequiredRole(decoded.Authorities === requiredRole);
+//         }
+//       } catch (error) {
+//         console.error('Error decoding token:', error);
+//         setIsAuthenticated(false);
+//       }
+//     }
+//     setLoading(false); // Set loading to false after processing
+//   }, [requiredRole]);
+
+//   if (loading) {
+//     return null; // Render nothing or a loading spinner while loading
+//   }
+
+//   if (!isAuthenticated) {
+//     console.log("not authen", isAuthenticated);
+//     return <Navigate to="/" replace />;
+//   }
+
+//   if (requiredRole && !hasRequiredRole) {
+//     console.log("not having the  RequiredRole ");
+//     return <Navigate to="/home" replace />;
+//   }
+
+//   return children;
+// };
+
+// export default ProtectedRoute;
+
