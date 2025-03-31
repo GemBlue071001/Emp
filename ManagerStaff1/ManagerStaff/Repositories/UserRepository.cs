@@ -82,10 +82,12 @@ namespace ManagerStaff.Repositories
                                          u.UserName.ToLower().Contains(normalizedSearchQuery));
             }
 
-            // Thêm bộ lọc theo department
+            // Thêm bộ lọc theo department và sub-departments
             if (departmentId.HasValue)
             {
-                query = query.Where(u => u.DepartmentId == departmentId.Value);
+                // Lấy tất cả các ID của department và sub-departments
+                var departmentIds = await GetDepartmentAndSubDepartmentIds(departmentId.Value);
+                query = query.Where(u => departmentIds.Contains(u.DepartmentId.Value));
             }
 
             // Thêm bộ lọc theo role
@@ -118,10 +120,12 @@ namespace ManagerStaff.Repositories
                                          u.UserName.ToLower().Contains(normalizedSearchQuery));
             }
 
-            // Thêm bộ lọc theo department
+            // Thêm bộ lọc theo department và sub-departments
             if (departmentId.HasValue)
             {
-                query = query.Where(u => u.DepartmentId == departmentId.Value);
+                // Lấy tất cả các ID của department và sub-departments
+                var departmentIds = await GetDepartmentAndSubDepartmentIds(departmentId.Value);
+                query = query.Where(u => departmentIds.Contains(u.DepartmentId.Value));
             }
 
             // Thêm bộ lọc theo role
@@ -131,6 +135,22 @@ namespace ManagerStaff.Repositories
             }
 
             return await query.CountAsync();    // Đếm số lượng user phù hợp
+        }
+
+        // Lấy tất cả các ID của department và sub-departments
+        private async Task<List<int>> GetDepartmentAndSubDepartmentIds(int departmentId)
+        {
+            var departmentIds = new List<int> { departmentId };
+            var subDepartments = await _context.Departments
+                .Where(d => d.ParentId == departmentId)
+                .ToListAsync();
+
+            foreach (var subDepartment in subDepartments)
+            {
+                departmentIds.AddRange(await GetDepartmentAndSubDepartmentIds(subDepartment.Id));
+            }
+
+            return departmentIds;
         }
 
         //Xóa User theo email

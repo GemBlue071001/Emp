@@ -158,87 +158,81 @@ const AdminDashboard = () => {
     }
   };
 
-  const renderContent = () => {
-    if (loading && users.length === 0) {
-      return (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-          <Spin size="large" />
-        </div>
-      );
-    }
-
-    if (error) {
-      return (
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-          <div style={{ color: '#ff4d4f' }}>Error: {error}</div>
-        </div>
-      );
-    }
-
-    return (
-      <>
-        <div style={{ marginBottom: '24px' }}>
-          <h1 style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '24px' }}>
-            Admin Dashboard
-          </h1>
-          <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
-            <Input
-              placeholder="Search users..."
-              value={searchQuery}
-              onChange={handleSearchChange}
-              prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-              style={{ width: '300px' }}
-            />
-            <Select
-              style={{ width: '200px' }}
-              placeholder="Department"
-              value={selectedDepartment}
-              onChange={(value) => {
-                setSelectedDepartment(value);
-                setPage(1);
-              }}
-              allowClear
-            >
-              {departments.map(dept => (
-                <Option key={dept.id} value={dept.id}>
-                  {dept.name}
-                </Option>
-              ))}
-            </Select>
-            <Select
-              style={{ width: '200px' }}
-              placeholder="Role"
-              value={selectedRole}
-              onChange={(value) => {
-                setSelectedRole(value);
-                setPage(1);
-              }}
-              allowClear
-            >
-              <Option value={1}>ADMIN</Option>
-              <Option value={2}>USER</Option>
-            </Select>
+  return (
+    <div style={{ display: 'flex' }}>
+      <Sidebar />
+      <div style={{ marginLeft: '180px', padding: '24px', flex: 1 }}>
+        {loading && users.length === 0 ? (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+            <Spin size="large" />
           </div>
-          <Button 
-            type="primary"
-            style={{ width: '200px' }}
-            icon={<UserAddOutlined />}
-            onClick={() => setIsCreateModalVisible(true)}
-          >
-            Add User
-          </Button>
-        </div>
-        <TableComponent
-          data={users}
-          departments={departments}
-          loading={loading}
-          pagination={{
-            current: page,
-            total: totalItems,
-            pageSize: pageSize,
-            onChange: handlePageChange
-          }}
-        />
+        ) : error ? (
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+            <div style={{ color: '#ff4d4f' }}>Error: {error}</div>
+          </div>
+        ) : (
+          <>
+            <div style={{ marginBottom: '24px' }}>
+              <h1 style={{ fontSize: '28px', fontWeight: 'bold', marginBottom: '24px' }}>
+                Admin Dashboard
+              </h1>
+              <div style={{ display: 'flex', gap: '16px', marginBottom: '16px' }}>
+                <Input
+                  placeholder="Search users..."
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
+                  style={{ width: '300px' }}
+                />
+                <TreeSelect
+                  style={{ width: '200px' }}
+                  placeholder="Department"
+                  value={selectedDepartment ? selectedDepartment.toString() : undefined}
+                  onChange={(value) => {
+                    setSelectedDepartment(value ? parseInt(value) : undefined);
+                    setPage(1);
+                  }}
+                  allowClear
+                  treeDefaultExpandAll
+                  treeData={transformToTreeData(departments)}
+                />
+                <Select
+                  style={{ width: '200px' }}
+                  placeholder="Role"
+                  value={selectedRole}
+                  onChange={(value) => {
+                    setSelectedRole(value);
+                    setPage(1);
+                  }}
+                  allowClear
+                >
+                  <Option value={1}>ADMIN</Option>
+                  <Option value={2}>USER</Option>
+                </Select>
+              </div>
+              <Button 
+                type="primary"
+                style={{ width: '200px' }}
+                icon={<UserAddOutlined />}
+                onClick={() => setIsCreateModalVisible(true)}
+              >
+                Add User
+              </Button>
+            </div>
+            <TableComponent
+              data={users}
+              departments={departments}
+              loading={loading}
+              pagination={{
+                current: page,
+                total: totalItems,
+                pageSize: pageSize,
+                onChange: handlePageChange
+              }}
+            />
+          </>
+        )}
+
         <Modal
           title="Create User"
           open={isCreateModalVisible}
@@ -324,15 +318,6 @@ const AdminDashboard = () => {
             </div>
           </Form>
         </Modal>
-      </>
-    );
-  };
-
-  return (
-    <div style={{ display: 'flex' }}>
-      <Sidebar />
-      <div style={{ marginLeft: '180px', padding: '24px', flex: 1 }}>
-        {renderContent()}
       </div>
     </div>
   );
