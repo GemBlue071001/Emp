@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import TableComponent from '../components/TableComponent';
 import Sidebar from '../components/Sidebar';
-import { Spin, Input, Button, Select, Modal, Form, message } from 'antd';
-import { SearchOutlined, UserAddOutlined } from '@ant-design/icons';
+import { Spin, Input, Button, Select, Modal, Form, message, TreeSelect } from 'antd';
+import { SearchOutlined, UserAddOutlined, CarryOutOutlined } from '@ant-design/icons';
+import type { TreeDataNode } from 'antd';
 
 const { Option } = Select;
 
@@ -20,7 +21,26 @@ interface User {
 interface Department {
   id: number;
   name: string;
+  parentId: number;
 }
+
+const transformToTreeData = (departments: Department[]): TreeDataNode[] => {
+  const buildTree = (parentId: number): TreeDataNode[] => {
+    return departments
+      .filter(dept => dept.parentId === parentId)
+      .map(dept => ({
+        title: dept.name,
+        key: dept.id.toString(),
+        value: dept.id.toString(),
+        label: dept.name,
+        icon: <CarryOutOutlined />,
+        children: buildTree(dept.id)
+      }))
+      .filter(node => node !== null);
+  };
+
+  return buildTree(0);
+};
 
 const AdminDashboard = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -253,22 +273,6 @@ const AdminDashboard = () => {
                 <Input size="middle" />
               </Form.Item>
               <Form.Item
-                name="email"
-                label="Email"
-                rules={[{ required: true, message: 'Please input email!' }]}
-                style={{ marginBottom: '12px' }}
-              >
-                <Input size="middle" />
-              </Form.Item>
-              <Form.Item
-                name="phone"
-                label="Phone"
-                rules={[{ required: true, message: 'Please input phone number!' }]}
-                style={{ marginBottom: '12px' }}
-              >
-                <Input size="middle" />
-              </Form.Item>
-              <Form.Item
                 name="userName"
                 label="Username"
                 rules={[{ required: true, message: 'Please input username!' }]}
@@ -285,18 +289,37 @@ const AdminDashboard = () => {
                 <Input.Password size="middle" />
               </Form.Item>
               <Form.Item
+                name="email"
+                label="Email"
+                rules={[
+                  { required: true, message: 'Please input email!' },
+                  { type: 'email', message: 'Please enter a valid email!' }
+                ]}
+                style={{ marginBottom: '12px' }}
+              >
+                <Input size="middle" />
+              </Form.Item>
+              <Form.Item
+                name="phone"
+                label="Phone"
+                rules={[{ required: true, message: 'Please input phone number!' }]}
+                style={{ marginBottom: '12px' }}
+              >
+                <Input size="middle" />
+              </Form.Item>
+              <Form.Item
                 name="departmentId"
                 label="Department"
                 rules={[{ required: true, message: 'Please select department!' }]}
                 style={{ marginBottom: '12px' }}
               >
-                <Select size="middle">
-                  {departments.map(dept => (
-                    <Option key={dept.id} value={dept.id}>
-                      {dept.name}
-                    </Option>
-                  ))}
-                </Select>
+                <TreeSelect
+                  style={{ width: '100%' }}
+                  placeholder="Select Department"
+                  allowClear
+                  treeDefaultExpandAll
+                  treeData={transformToTreeData(departments)}
+                />
               </Form.Item>
             </div>
           </Form>
@@ -306,10 +329,12 @@ const AdminDashboard = () => {
   };
 
   return (
-    <>
+    <div style={{ display: 'flex' }}>
       <Sidebar />
-      {renderContent()}
-    </>
+      <div style={{ marginLeft: '180px', padding: '24px', flex: 1 }}>
+        {renderContent()}
+      </div>
+    </div>
   );
 };
 

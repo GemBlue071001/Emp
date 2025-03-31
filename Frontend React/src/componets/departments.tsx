@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Typography, message, Button, Modal, Select, Input, Tree } from 'antd';
+import { Card, Typography, message, Button, Modal, Select, Input, Tree, TreeSelect } from 'antd';
 import { PlusOutlined, CarryOutOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
@@ -38,6 +38,8 @@ const transformToTreeData = (departments: Department[]): TreeDataNode[] => {
       .map(dept => ({
         title: dept.name,
         key: dept.id.toString(),
+        value: dept.id.toString(),
+        label: dept.name, // Add the label property
         icon: <CarryOutOutlined />,
         children: buildTree(dept.id)
       }))
@@ -302,20 +304,15 @@ const DepartmentComponent: React.FC = () => {
 
           <div>
             <div style={{ marginBottom: '8px' }}>Parent Department</div>
-            <Select
+            <TreeSelect
               style={{ width: '100%' }}
               placeholder="Select parent department"
-              value={newDepartment.parentId}
-              onChange={(value) => setNewDepartment(prev => ({ ...prev, parentId: value }))}
+              value={newDepartment.parentId !== 0 ? newDepartment.parentId.toString() : undefined}
+              onChange={(value) => setNewDepartment(prev => ({ ...prev, parentId: value ? parseInt(value) : 0 }))}
               allowClear
-            >
-              <Select.Option value={0}>None</Select.Option>
-              {departments.map(dept => (
-                <Select.Option key={dept.id} value={dept.id}>
-                  {dept.name}
-                </Select.Option>
-              ))}
-            </Select>
+              treeDefaultExpandAll
+              treeData={transformToTreeData(departments)}
+            />
           </div>
         </Modal>
 
@@ -360,19 +357,15 @@ const DepartmentComponent: React.FC = () => {
           </div>
           <div>
             <div style={{ marginBottom: '8px' }}>Parent Department</div>
-            <Select
+            <TreeSelect
               style={{ width: '100%' }}
               placeholder="Select Parent Department"
-              value={editingDepartment.parentId}
-              onChange={(value) => setEditingDepartment({ ...editingDepartment, parentId: value })}
-            >
-              <Select.Option value={0}>No Parent</Select.Option>
-              {departments.map(dept => (
-                <Select.Option key={dept.id} value={dept.id}>
-                  {dept.name}
-                </Select.Option>
-              ))}
-            </Select>
+              value={editingDepartment.parentId !== 0 ? editingDepartment.parentId.toString() : undefined}
+              onChange={(value) => setEditingDepartment({ ...editingDepartment, parentId: value ? parseInt(value) : 0 })}
+              allowClear
+              treeDefaultExpandAll
+              treeData={transformToTreeData(departments)}
+            />
           </div>
         </Modal>
 

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Table, Tag, Space, Avatar, Button, Modal, message, Input, Form, Select } from 'antd';
+import { Table, Tag, Space, Avatar, Button, Modal, message, Input, Form, TreeSelect } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { jwtDecode } from 'jwt-decode';
-
-const { Option } = Select;
+import { CarryOutOutlined } from '@ant-design/icons';
+import type { TreeDataNode } from 'antd';
 
 interface TableRow {
   email: string;
@@ -13,12 +13,13 @@ interface TableRow {
   phone: string;
   userType: string;
   subDepartment: string | null;
-  departmentId: number;
+  departmentId: number | null;
 }
 
 interface Department {
   id: number;
   name: string;
+  parentId: number;
 }
 
 interface TableComponentProps {
@@ -38,6 +39,24 @@ interface DecodedToken {
   exp: number;
   Authorities: string;
 }
+
+const transformToTreeData = (departments: Department[]): TreeDataNode[] => {
+  const buildTree = (parentId: number): TreeDataNode[] => {
+    return departments
+      .filter(dept => dept.parentId === parentId)
+      .map(dept => ({
+        title: dept.name,
+        key: dept.id.toString(),
+        value: dept.id.toString(),
+        label: dept.name,
+        icon: <CarryOutOutlined />,
+        children: buildTree(dept.id)
+      }))
+      .filter(node => node !== null);
+  };
+
+  return buildTree(0);
+};
 
 const TableComponent: React.FC<TableComponentProps> = ({ data, departments, loading, pagination }) => {
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
@@ -66,8 +85,7 @@ const TableComponent: React.FC<TableComponentProps> = ({ data, departments, load
       email: record.email,
       phone: record.phone,
       userName: record.name,
-      password: '',
-      departmentId: record.departmentId
+      departmentId: record.departmentId ? record.departmentId.toString() : undefined
     });
     setIsEditModalVisible(true);
   };
@@ -267,11 +285,23 @@ const TableComponent: React.FC<TableComponentProps> = ({ data, departments, load
               <Input size="middle" />
             </Form.Item>
             <Form.Item
-              name="email"
-              label="Email"
+              name="userName"
+              label="Username"
+              rules={[{ required: true, message: 'Please input username!' }]}
               style={{ marginBottom: '12px' }}
             >
-              <Input disabled size="middle" />
+              <Input size="middle" />
+            </Form.Item>
+            <Form.Item
+              name="email"
+              label="Email"
+              rules={[
+                { required: true, message: 'Please input email!' },
+                { type: 'email', message: 'Please enter a valid email!' }
+              ]}
+              style={{ marginBottom: '12px' }}
+            >
+              <Input size="middle" />
             </Form.Item>
             <Form.Item
               name="phone"
@@ -282,33 +312,18 @@ const TableComponent: React.FC<TableComponentProps> = ({ data, departments, load
               <Input size="middle" />
             </Form.Item>
             <Form.Item
-              name="userName"
-              label="Username"
-              rules={[{ required: true, message: 'Please input username!' }]}
-              style={{ marginBottom: '12px' }}
-            >
-              <Input size="middle" />
-            </Form.Item>
-            <Form.Item
-              name="password"
-              label="New Password (optional)"
-              style={{ marginBottom: '12px' }}
-            >
-              <Input.Password size="middle" />
-            </Form.Item>
-            <Form.Item
               name="departmentId"
               label="Department"
               rules={[{ required: true, message: 'Please select department!' }]}
               style={{ marginBottom: '12px' }}
             >
-              <Select size="middle">
-                {departments.map(dept => (
-                  <Option key={dept.id} value={dept.id}>
-                    {dept.name}
-                  </Option>
-                ))}
-              </Select>
+              <TreeSelect
+                style={{ width: '100%' }}
+                placeholder="Select Department"
+                allowClear
+                treeDefaultExpandAll
+                treeData={transformToTreeData(departments)}
+              />
             </Form.Item>
           </div>
         </Form>

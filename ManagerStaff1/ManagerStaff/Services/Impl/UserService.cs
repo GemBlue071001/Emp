@@ -121,6 +121,7 @@ namespace ManagerStaff.Services.Impl
                 Name = user.UserName,
                 Phone = user.Phone,
                 UserType = user.Role?.Name ?? "Unknown",
+                DepartmentId = user.DepartmentId,
                 DepartmentName = user.Department?.Name ?? "Không có phòng ban",
                 SubDepartment = user.Department?.Parent?.Name ?? "Không có phòng ban con",
 
