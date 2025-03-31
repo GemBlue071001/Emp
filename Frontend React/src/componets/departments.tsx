@@ -4,8 +4,13 @@ import { PlusOutlined, CarryOutOutlined, DeleteOutlined } from '@ant-design/icon
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import type { TreeDataNode } from 'antd';
+import { jwtDecode } from 'jwt-decode';
 
 const { Title } = Typography;
+
+interface DecodedToken {
+  role: string;
+}
 
 interface Department {
   id: number;
@@ -65,8 +70,27 @@ const DepartmentComponent: React.FC = () => {
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false);
 
   useEffect(() => {
+    // Check if user is admin
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      const decoded = jwtDecode<DecodedToken>(token);
+      if (decoded.role !== 'ADMIN') {
+        navigate('/home');
+        return;
+      }
+    } catch (error) {
+      console.error('Error decoding token:', error);
+      navigate('/login');
+      return;
+    }
+
     fetchDepartments();
-  }, []);
+  }, [navigate]);
 
   const fetchDepartments = async () => {
     try {
