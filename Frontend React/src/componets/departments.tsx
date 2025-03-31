@@ -9,7 +9,7 @@ import { jwtDecode } from 'jwt-decode';
 const { Title } = Typography;
 
 interface DecodedToken {
-  role: string;
+  Authorities: string;
 }
 
 interface Department {
@@ -79,7 +79,7 @@ const DepartmentComponent: React.FC = () => {
 
     try {
       const decoded = jwtDecode<DecodedToken>(token);
-      if (decoded.role !== 'ADMIN') {
+      if (decoded.Authorities !== 'ADMIN') {
         navigate('/home');
         return;
       }
