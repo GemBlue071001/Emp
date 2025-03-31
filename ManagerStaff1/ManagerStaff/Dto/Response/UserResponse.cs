@@ -9,6 +9,7 @@
         public string Phone { get; set; }
         public string UserType { get; set; }
         public string DepartmentName { get; set; }
+        public int? DepartmentId { get; set; }
         public string SubDepartment { get; set; }
         public string UserName { get; set; }
         public int? RoleId { get; set; }

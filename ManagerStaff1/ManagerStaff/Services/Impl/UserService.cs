@@ -19,7 +19,7 @@ namespace ManagerStaff.Services.Impl
         {
             this.userRepository = userRepository;
             this.roleRepository = roleRepository;
-            this.passwordHasher = passwordHasher; 
+            this.passwordHasher = passwordHasher;
         }
 
         //Tạo mới 1 người dùng dựa trên thông tin từ UserCreationRequest
@@ -78,7 +78,12 @@ namespace ManagerStaff.Services.Impl
             user.Phone = request.Phone;
             user.UserName = request.UserName;
             user.DepartmentId = request.DepartmentId;
-            user.Password = passwordHasher.HashPassword(user, request.Password.Trim());
+
+            if (request.Password != null)
+            {
+                user.Password = passwordHasher.HashPassword(user, request.Password.Trim());
+            }
+
             if (!string.IsNullOrWhiteSpace(request.Password))
             {
                 user.Password = passwordHasher.HashPassword(user, request.Password.Trim()); //Chỉ băm lại mật khẩu nếu mật khẩu mới được cung cấp
@@ -118,7 +123,7 @@ namespace ManagerStaff.Services.Impl
                 UserType = user.Role?.Name ?? "Unknown",
                 DepartmentName = user.Department?.Name ?? "Không có phòng ban",
                 SubDepartment = user.Department?.Parent?.Name ?? "Không có phòng ban con",
-                
+
             }).ToList();
 
             var totalPages = (int)Math.Ceiling((double)totalItems / size);      //Tính tổng số trang

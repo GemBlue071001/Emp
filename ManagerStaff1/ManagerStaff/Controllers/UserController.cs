@@ -170,8 +170,10 @@ namespace ManagerStaff.Controllers
                 Email = user.Email,
                 Name = user.UserName,
                 FirstName = user.FirstName,
+                DepartmentId = user.DepartmentId,
                 LastName = user.LastName,
                 Phone = user.Phone,
+                
                 DepartmentName = user.Department?.Name ?? "Không có phòng ban"
             };
 
